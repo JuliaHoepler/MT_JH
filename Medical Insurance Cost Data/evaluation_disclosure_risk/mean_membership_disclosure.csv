@@ -1,0 +1,7 @@
+"Method","m","Mean_M"
+"arf",5,0.001
+"ctgan",5,0.036
+"privbayes",5,-0.006
+"synthpop",5,0.019
+"tabsyn",5,-0.01
+"tvae",5,0.001

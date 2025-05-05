@@ -1,0 +1,7 @@
+"Method","M","Mean_NNDR_Synth","Mean_NNDR_Holdout","NNDR_Diff"
+"arf",5,0.747,0.758,-0.011
+"ctgan",5,0.773,0.758,0.015
+"privbayes",5,0.82,0.758,0.062
+"synthpop",5,0.725,0.758,-0.033
+"tabsyn",5,0.722,0.758,-0.036
+"tvae",5,0.766,0.758,0.008
