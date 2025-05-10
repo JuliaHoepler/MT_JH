@@ -27,3 +27,10 @@ write.csv(medical_insurance_train, "Medical Insurance Cost Data/Raw Data/real_tr
 write.csv(medical_insurance_holdout, "Medical Insurance Cost Data/Raw Data/real_holdout.csv", row.names = FALSE)
 
 
+# For alpha precision, beta recall and authentcity
+medical_insurance <- medical_insurance %>%
+  mutate(sex = as.character(sex),
+         children = as.numeric(children),
+         smoker = as.character(smoker),
+         region = as.character(region))
+write.csv(medical_insurance, "Medical Insurance Cost Data/Data/medical_insurance_2.csv", row.names = FALSE)

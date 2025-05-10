@@ -31,6 +31,9 @@ real_holdout <- read.csv("Heart Failure Prediction Data/Raw Data/real_holdout.cs
 set.seed(3105)
 
 t <- 0.05  
+n <- nrow(real_data) # 2772
+N <- n/t # (N = n/t)
+
 attack_size <- round(0.1 * n)  
 num_train_samples <- min(nrow(real_train), max(1, round(t * attack_size)))
 num_holdout_samples <- min(nrow(real_holdout), attack_size - num_train_samples)
@@ -46,11 +49,8 @@ attack_data <- rbind(attack_train, attack_holdout)
 methods <- c("synthpop", "arf", "privbayes", "ctgan", "tvae", "tabsyn")
 
 # List of dataset sizes to test
-#m_values <- c(5, 10, 50)
 m_values <- c(5)
 
-n <- nrow(real_data) # 2772
-N <- 55440 # (N = n/t)
 
 # Compute F1 scores and store results in a single data frame
 results_df <- do.call(rbind, lapply(m_values, function(m) {

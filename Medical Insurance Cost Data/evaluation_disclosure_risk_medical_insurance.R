@@ -31,7 +31,10 @@ real_holdout <- read.csv("Medical Insurance Cost Data/Raw Data/real_holdout.csv"
 
 set.seed(3105)
 
-t <- 0.05  
+t <- 0.05 
+n <- nrow(real_data)
+N <- n/t # (N = n/t)
+
 attack_size <- round(0.1 * n)  
 num_train_samples <- min(nrow(real_train), max(1, round(t * attack_size)))
 num_holdout_samples <- min(nrow(real_holdout), attack_size - num_train_samples)
@@ -47,13 +50,9 @@ real_train <- real_train %>%
   mutate(across(c(sex, smoker, region, children), as.factor))
 
 # Evaluate for different values of m
-#m_values <- c(5, 10, 50)
 m_values <- c(5)
 methods <- c("synthpop", "arf", "privbayes", "ctgan", "tvae", "tabsyn")
 
-
-n <- nrow(real_data)
-N <- 55440 #(N = n/t)
 
 # Compute F1 scores and store results in a single data frame
 results_df <- do.call(rbind, lapply(m_values, function(m) {

@@ -518,8 +518,7 @@ compute_f1 <- function(synthetic_data) {
     return(min_dist)
   })
   
-  #threshold <- 5  # Predefined threshold
-  threshold <- quantile(match_attack, 0.25) # 2
+  threshold <- quantile(match_attack, 0.25)
   predicted_membership <- match_attack <= threshold
   actual_membership <- 1:nrow(attack_data) %in% 1:nrow(attack_train)  # True labels
   
@@ -531,7 +530,8 @@ compute_f1 <- function(synthetic_data) {
 }
 
 
-# Function to compute mean F1 scores
+
+
 evaluate_method <- function(method, m, n, N) {
   
   path <- paste0("Medical Insurance Cost Data/Data/train_data/", method, "/")
@@ -545,21 +545,20 @@ evaluate_method <- function(method, m, n, N) {
   
   f1_max <- 2 * n / (N/(1+n/N))
   
-  M <- (f1_scores-f1_max) / (1-f1_max)
+  M <- (mean_f1-f1_max) / (1-f1_max)
   
   # Create a combined data frame with both mean and individual F1 scores
   result_df <- data.frame(Method = method,
                           m = m,
                           File = selected_files,
                           F1_Score = f1_scores,
-                          F1_Max = f1_max,
+                          Mean_F1_Score = mean_f1,
                           M = M)
   
   return(result_df)
   
-
+  
 }
-
 
 
 

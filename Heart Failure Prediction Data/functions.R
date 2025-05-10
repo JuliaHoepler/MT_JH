@@ -493,8 +493,7 @@ compute_f1 <- function(synthetic_data) {
     return(min_dist)
   })
   
-  #threshold <- 5  # Predefined threshold
-  threshold <- quantile(match_attack, 0.25) # 2
+  threshold <- quantile(match_attack, 0.25)
   predicted_membership <- match_attack <= threshold
   actual_membership <- 1:nrow(attack_data) %in% 1:nrow(attack_train)  # True labels
   

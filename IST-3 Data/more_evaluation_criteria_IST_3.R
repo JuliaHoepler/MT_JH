@@ -119,9 +119,11 @@ write.csv(results_df, "IST-3 Data/evaluation_more_criteria/synthetic_data_evalua
 
 library(forcats)
 
+results_df <- read.csv("IST-3 Data/alpha_precision_results_means.csv")
+
 
 results_df <- results_df %>%
-  mutate(Method = fct_recode(Method,
+  mutate(method = fct_recode(method,
                              ARF = "arf",
                              CTGAN = "ctgan",
                              PrivBayes = "privbayes",
@@ -130,10 +132,10 @@ results_df <- results_df %>%
                              TVAE = "tvae"))
 
 
-plot_precision_recall <- ggplot(results_df, aes(x = BetaRecall, y = AlphaPrecision, color = Method)) +
+plot_precision_recall <- ggplot(results_df, aes(x = beta_recall, y = alpha_precision, color = method)) +
   geom_jitter(size = 4, width = 0.005) +  # Added jitter
-  xlim(0.5, 1.0) +
-  ylim(0.5, 1.0) +
+  xlim(0.0, 1.0) +
+  ylim(0.0, 1.0) +
   labs(x = expression(beta * "-Recall (Diversity)"),
     y = expression(alpha * "-Precision (Fidelity)")
   ) +

@@ -1,7 +1,7 @@
 "Method","m","Mean_M"
-"arf",5,0.141
-"ctgan",5,0.099
-"privbayes",5,0.136
-"synthpop",5,0.087
-"tabsyn",5,0.073
-"tvae",5,0.097
+"arf",5,0.072
+"ctgan",5,0.027
+"privbayes",5,0.067
+"synthpop",5,0.014
+"tabsyn",5,-0.001
+"tvae",5,0.025

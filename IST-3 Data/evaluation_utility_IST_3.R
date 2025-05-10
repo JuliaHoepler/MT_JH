@@ -30,6 +30,15 @@ data_small <- readRDS("IST-3 Data/Raw Data/data_small.Rds")
 
 
 
+data_small <- data_small %>%
+  mutate(itt_treat = as.character(itt_treat),
+          vis_infarct = as.character(vis_infarct),
+          outcome = as.numeric(outcome))
+
+write.csv(data_small, "IST-3 Data/Raw Data/data_small.csv", row.names = FALSE)
+
+
+
 ## Synthpop ####
 
 # List all CSV files in the directory
@@ -532,202 +541,5 @@ write.csv(results, "IST-3 Data/evaluation_utility/global_utility/global_utility_
 
 
 
-# Radar plots ####
-
-library(fmsb)
-
-# Raw data
-raw_data <- data.frame(
-  row.names = c("ARF", "CTGAN", "PrivBayes", "Synthpop", "TABSYN", "TVAE"),
-  C2ST_AUC = c(0.723, 0.904, 0.696, 0.550, 0.605, 0.905),
-  S_pMSE = c(243.277, 797.856, 335.188, 240.991, 250.205, 332.434),
-  Alpha_Precision = c(0.898, 0.951, 0.561, 0.901, 0.899, 0.960),
-  Beta_Recall = c(0.902, 0.836, 0.976, 0.897, 0.900, 0.830),
-  CIO = c(0.879, 0.550, 0.285, 0.893, 0.856, 0.413),
-  MASD = c(0.205, 4.060, 16.300, 0.601, 0.072, 10.600),
-  R2 = c(0.750, 0.719, 0.519, 0.747, 0.753, 0.710)
-)
 
 
-# Function to rank (reverse scale: best rank 1 outward)
-rank_reversed <- function(x, invert = FALSE) {
-  if (invert) {
-    return(rank(x))  # smaller error is better
-  } else {
-    return(rank(-x)) # larger better
-  }
-}
-
-# Create the ranking
-ranked_data <- data.frame(
-  C2ST_AUC = rank_reversed(raw_data$C2ST_AUC, invert = TRUE),
-  alpha_Precision = rank_reversed(raw_data$Alpha_Precision),
-  beta_Recall = rank_reversed(raw_data$Beta_Recall),
-  S_pMSE = rank_reversed(raw_data$S_pMSE, invert = TRUE),
-  CIO = rank_reversed(raw_data$CIO),
-  MASD = rank_reversed(raw_data$MASD, invert = TRUE),
-  R2 = rank_reversed(raw_data$R2)
-)
-
-#ranked_data_inverted <- 7 - ranked_data
-
-# Prepare radar data
-radar_data_full <- rbind(
-  rep(1, ncol(ranked_data)),  # max = 1
-  rep(6, ncol(ranked_data)),  # min = 6
-  ranked_data
-)
-
-# Set row names
-row.names(radar_data_full) <- c("Max", "Min", row.names(raw_data))
-
-# Custom colors
-method_colors <- c("#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F")
-
-# List of methods
-methods <- row.names(raw_data)
-
-
-labels <- c(
-  "C2ST AUC",
-  expression(alpha*"-Precision"),
-  expression(beta*"-Recall"),
-  "S_pMSE",
-  "CIO",
-  "MASD",
-  expression(R^2)
-)
-
-
-# Open a PDF device to save all the plots in one file
-pdf(file = "IST-3 Data/evaluation_utility/all_radar_plots.pdf", width = 9, height = 6)
-
-# Set up the plotting area with 2 rows and 3 columns
-par(mfrow = c(2, 3), mar = c(3, 3, 2, 2), oma = c(0, 0, 2, 0))
-
-# Loop through each method and create a radar plot
-for (i in 1:length(methods)) {
-  method <- methods[i]
-  
-  # Only take max, min, and this method
-  radar_data_one <- radar_data_full[c("Max", "Min", method), ]
-  
-  # Generate the radar plot for this method
-  radarchart(
-    radar_data_one,
-    axistype = 1,
-    vlabels = labels,
-    pcol = method_colors[i],
-    pfcol = scales::alpha(method_colors[i], 0.4),
-    plwd = 3,
-    cglcol = "grey",
-    cglty = 1,
-    axislabcol = "black",
-    caxislabels = 5:1,
-    vlcex = 0.8,
-    title = method
-  )
-}
-
-# Close the PDF device (this saves all plots)
-dev.off()
-
-
-
-
-
-################################################################################
-
-library(ggplot2)
-library(patchwork)
-library(dplyr)
-
-# Your color scheme
-method_colors <- c(
-  "ARF" = "#66C2A5",
-  "CTGAN" = "#FC8D62",
-  "PrivBayes" = "#8DA0CB",
-  "Synthpop" = "#E78AC3",
-  "TABSYN" = "#A6D854",
-  "TVAE" = "#FFD92F"
-)
-
-# Function to calculate S_pMSE
-calculate_spmse <- function(observed, synthetic) {
-  data_combined <- rbind(
-    data.frame(observed, source = "observed"),
-    data.frame(synthetic, source = "synthetic")
-  )
-  
-  data_combined$source <- factor(data_combined$source, levels = c("observed", "synthetic"))
-  
-  # Logistic regression
-  model <- glm(source ~ ., family = binomial, data = data_combined)
-  
-  preds <- predict(model, type = "response")
-  
-  spmse <- mean((preds - 0.5)^2)
-  return(spmse)
-}
-
-# Main plotting function
-generate_manual_plots <- function(variable, synthetic_datasets_list, observed_data, output_path) {
-  
-  plots_list <- list()
-  
-  # Loop over each synthetic method
-  for (method_name in names(synthetic_datasets_list)) {
-    
-    synthetic_data <- synthetic_datasets_list[[method_name]]
-    
-    # Calculate S_pMSE
-    observed_subset <- observed_data[, ..variable]
-    synthetic_subset <- synthetic_data[, ..variable]
-    
-    
-    colnames(observed_subset) <- "var"
-    colnames(synthetic_subset) <- "var"
-    
-    spmse_value <- calculate_spmse(observed_subset, synthetic_subset)
-    
-    # Check if variable is continuous or categorical
-    if (is.numeric(observed_subset$var)) {
-      # Density plot for continuous
-      p <- ggplot() +
-        geom_density(data = observed_subset, aes(x = var, fill = "Observed"), alpha = 0.5) +
-        geom_density(data = synthetic_subset, aes(x = var, fill = "Synthetic"), alpha = 0.5) +
-        scale_fill_manual(values = c("Observed" = "black", "Synthetic" = method_colors[method_name])) +
-        labs(title = paste0(method_name, " | S_pMSE = ", round(spmse_value, 2)),
-             x = variable, y = "Density") +
-        theme_minimal()
-      
-    } else {
-      # Bar plot for categorical
-      observed_freq <- observed_subset %>% count(var) %>% mutate(source = "Observed")
-      synthetic_freq <- synthetic_subset %>% count(var) %>% mutate(source = "Synthetic")
-      
-      combined_freq <- rbind(observed_freq, synthetic_freq)
-      
-      p <- ggplot(combined_freq, aes(x = var, y = n, fill = source)) +
-        geom_col(position = "dodge", alpha = 0.7) +
-        scale_fill_manual(values = c("Observed" = "black", "Synthetic" = method_colors[method_name])) +
-        labs(title = paste0(method_name, " | S_pMSE = ", round(spmse_value, 2)),
-             x = variable, y = "Count") +
-        theme_minimal()
-    }
-    
-    plots_list[[method_name]] <- p
-  }
-  
-  # Combine all method plots into one
-  final_plot <- wrap_plots(plots_list, ncol = 2) +
-    plot_layout(guides = "collect") &
-    theme(legend.position = "bottom",
-          legend.title = element_blank())
-  
-  # Save the plot
-  ggsave(filename = paste0(output_path, "manual_plot_", variable, ".pdf"),
-         plot = final_plot, height = 8, width = 12)
-}
-
-generate_manual_plots("vis_infarct", datasets_m5_wo_original, data_small, "IST-3 Data/evaluation_utility/fit_for_purpose_utility/")
