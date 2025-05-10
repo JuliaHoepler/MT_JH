@@ -1,4 +1,4 @@
-# An Evaluation of Different Methods for Synthteic Data Generation on Real Data Sets
+# 📊 An Evaluation of Different Methods for Synthteic Data Generation on Real Data Sets
 
 ## Julia Höpler - Master's Thesis
 
@@ -6,7 +6,7 @@ This repository contains data, code and plots for evaluating various synthetic d
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ### 📁 Heart Failure Prediction Data
 
