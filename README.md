@@ -42,7 +42,7 @@ This folder contains several subfolders and files:
 
 ### 📁 IST-3 Data
 
-This folder contains data and scripts related to the IST-3 stroke study.
+This folder contains data, code and results such as plots related to the IST-3 data.
 
 📌 The structure and code organization are analogous to the *Heart Failure Prediction Data* folder, including synthesizer scripts, evaluation code, and results.
 
@@ -50,9 +50,9 @@ This folder contains data and scripts related to the IST-3 stroke study.
 
 ### 📁 Medical Insurance Cost Data
 
-This folder contains the dataset and code for analyzing synthetic versions of medical insurance cost data.
+This folder contains data, code and results such as plots related to the medical insurance cost data.
 
-📌 The folder follows the same structure and naming conventions as the other two datasets, ensuring consistency in pre-processing, generation, evaluation, and visualization.
+📌 The structure and code organization are analogous to the *Heart Failure Prediction Data* folder, including synthesizer scripts, evaluation code, and results.
 
 ---
 
