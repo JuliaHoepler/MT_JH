@@ -81,34 +81,15 @@ write.csv(mean_results, "Heart Failure Prediction Data/evaluation_disclosure_ris
 # 2. Attribute disclosure risk ####
 
 
-## 2.1 Calculate TCAP ####
-
-# List of synthetic data generation methods
+# Define methods and sample sizes
 methods <- c("synthpop", "arf", "privbayes", "ctgan", "tvae", "tabsyn")
+sample_sizes <- c(5)
 
-# List of dataset sizes to test
-#m_values <- c(5, 10, 50)
-m_values <- c(5)
+# Compute results for all methods and sample sizes
+results <- expand.grid(Method = methods, SampleSize = sample_sizes)
+results$TCAP<- mapply(compute_attribute_disclosure, results$Method, results$SampleSize)
 
-# Compute TCAP scores for all methods
-tcap_results <- data.frame(
-  Methode = methods,
-  do.call(rbind, lapply(methods, compute_tcap_for_method, m_values = m_values))
-)
+print(results)
 
-# Rename columns for better readability
-# colnames(tcap_results) <- c("Methode", "m = 5", "m = 10", "m = 50")
-colnames(tcap_results) <- c("Methode", "m = 5")
-
-# Print the results table
-kable(tcap_results, caption = "TCAP Scores für verschiedene Methoden und m-Werte")
-
-# Save the TCAP results to a CSV file
-write.csv(tcap_results, "Heart Failure Prediction Data/evaluation_disclosure_risk/TCAP_scores.csv", row.names = FALSE)
-
-
-
-
-
-
+write.csv(results, "Heart Failure Prediction Data/evaluation_disclosure_risk/tcap_synthpop.csv", row.names = FALSE)
 
