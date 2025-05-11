@@ -403,7 +403,7 @@ evaluate_model <- function(datasets, m, output_path) {
   regression_coeff_plot_combined <- ggplot(combined_results, aes(y = forcats::fct_rev(Term), x = combined_estimate, col = Method)) + 
     geom_point(position = pd) + 
     geom_errorbarh(aes(xmin = ci_lo_combined, xmax = ci_hi_combined), position = pd, height = 0.5) + 
-    geom_vline(xintercept = 0, linetype = "dashed", color = "grey", linewidth = 1) +  
+    geom_vline(xintercept = 1, linetype = "dashed", color = "grey", linewidth = 1) +  
     theme_bw() +
     labs(title = "",
          x = "Odds Ratio",
@@ -544,101 +544,43 @@ evaluate_method <- function(method, m, n, N) {
 # 2. Attribute disclosure risk ####
 
 
-# Function to compute WEAP
-compute_WEAP <- function(synthetic_data, key_vars, target_var) {
-  synthetic_data %>%
-    group_by(across(all_of(key_vars))) %>%
-    mutate(WEAP = sum(!!sym(target_var) == first(!!sym(target_var))) / n()) %>%
-    ungroup()
-}
-
-# Function to filter records with WEAP = 1
-filter_high_WEAP <- function(synthetic_data) {
-  synthetic_data %>% filter(WEAP == 1)
-}
-
-# Function to compute TCAP for a single synthetic dataset
-compute_TCAP <- function(original_data, synthetic_data, key_vars, target_var) {
-  matched_data <- inner_join(synthetic_data, original_data, by = key_vars, suffix = c("_synth", "_orig"))
+compute_attribute_disclosure <- function(method, m) {
   
-  matched_data <- matched_data %>%
-    mutate(TCAP = ifelse(!!sym(paste0(target_var, "_synth")) == !!sym(paste0(target_var, "_orig")), 1, 0))
+  # Load files dynamically
+  path <- "Heart Failure Prediction Data/Data"
+  pattern <- paste0("syn_heart_failure_", method, "_(", paste(1:m, collapse = "|"), ")\\.csv$")
+  dateien <- list.files(path = file.path(path, method), pattern = pattern, full.names = TRUE)
   
-  mean(matched_data$TCAP, na.rm = TRUE)  # Final TCAP score for the dataset
-}
-
-compute_TCAP_multiple <- function(original_data, synthetic_datasets, key_vars, target_var) {
-  tcap_scores <- map_dbl(synthetic_datasets, function(synth_data) {
-    synth_data <- compute_WEAP(synth_data, key_vars, target_var)
-    
-    # Debugging: Print unique WEAP values
-    print("Unique WEAP values before filtering:")
-    print(unique(synth_data$WEAP))
-    
-    synth_data <- filter_high_WEAP(synth_data)
-    
-    # Debugging: Check number of records remaining
-    print(paste("Records remaining after filtering:", nrow(synth_data)))
-    
-    if (nrow(synth_data) == 0) {
-      return(NA)  # Avoid NaN issues
-    }
-    
-    tcap_value <- compute_TCAP(original_data, synth_data, key_vars, target_var)
-    
-    # Debugging: Print TCAP for each dataset
-    print(paste("TCAP score for this dataset:", tcap_value))
-    
-    return(tcap_value)
+  # Read data
+  syn_data <- lapply(dateien, read.csv)
+  
+  # Convert categorical variables
+  syn_data <- lapply(syn_data, function(df) {
+    df$HeartDisease <- as.factor(df$HeartDisease)
+    df$Sex <- as.factor(df$Sex)
+    df$ChestPainType <- as.factor(df$ChestPainType)
+    df$FastingBS <- as.factor(df$FastingBS)
+    df$RestingECG <- as.factor(df$RestingECG)
+    df$ExerciseAngina <- as.factor(df$ExerciseAngina)
+    df$ST_Slope <- as.factor(df$ST_Slope)
+    return(df)
   })
   
-  mean_tcap <- mean(tcap_scores, na.rm = TRUE)  # Avoid NaN if all values are NA
+  # Compute attribute disclosure (disclosure function should be defined)
+  attribute_disclosure <- disclosure(syn_data, heart_failure, 
+                                     keys = c("Age", "Sex", "MaxHR"), 
+                                     target = "HeartDisease")
   
-  # Debugging: Print final TCAP values
-  print("Final TCAP scores per dataset:")
-  print(tcap_scores)
+  # Example of using attribute_disclosure$allCAPs[5]
+  tcap_value <- attribute_disclosure$allCAPs[[5]]/100
   
-  return(mean_tcap)
+  if (is.numeric(tcap_value)) {
+    return(round(mean(tcap_value), 3))
+  } else {
+    # Falls der Wert nicht numerisch ist, NA zurückgeben
+    return(NA)
+  }
 }
-
-
-
-
-
-
-
-# Function to compute TCAP scores for a given method and m values
-compute_tcap_for_method <- function(method, m_values) {
-  path <- paste0("Heart Failure Prediction Data/Data/", tolower(method), "/")
-  pattern <- paste0("^syn_heart_failure_", tolower(method), "_.*\\.csv$")
-  
-  # List all files
-  all_files <- list.files(path = path, pattern = pattern, full.names = TRUE)
-  
-  # Compute TCAP scores for each m value
-  tcap_scores <- sapply(m_values, function(m) {
-    # Build regex dynamically to match correct files for given m
-    regex_m <- if (m == 10) {
-      "syn_heart_failure_.*_(1|2|3|4|5|6|7|8|9|10)\\.csv$"
-    } else if (m == 50) {
-      "syn_heart_failure_.*_([1-9]|[1-4][0-9]|50)\\.csv$"
-    } else { # Default case for m = 5
-      "syn_heart_failure_.*_[1-5]\\.csv$"
-    }
-    
-    # Select matching files
-    selected_files <- all_files[grepl(regex_m, all_files)]
-    syn_data_list <- lapply(selected_files, read.csv)
-    
-    # Compute TCAP score
-    compute_TCAP_multiple(real_data, syn_data_list, key_vars = c("Age", "Sex", "MaxHR"), target_var = "HeartDisease")
-  })
-  
-  return(tcap_scores)
-}
-
-
-
 
 
 

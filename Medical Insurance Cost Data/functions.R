@@ -569,101 +569,40 @@ evaluate_method <- function(method, m, n, N) {
 # 2. Attribute disclosure risk ####
 
 
-# Function to compute WEAP
-compute_WEAP <- function(synthetic_data, key_vars, target_var) {
-  synthetic_data %>%
-    group_by(across(all_of(key_vars))) %>%
-    mutate(WEAP = sum(!!sym(target_var) == first(!!sym(target_var))) / n()) %>%
-    ungroup()
-}
-
-# Function to filter records with WEAP = 1
-filter_high_WEAP <- function(synthetic_data) {
-  synthetic_data %>% filter(WEAP == 1)
-}
-
-# Function to compute TCAP for a single synthetic dataset
-compute_TCAP <- function(original_data, synthetic_data, key_vars, target_var) {
-  matched_data <- inner_join(synthetic_data, original_data, by = key_vars, suffix = c("_synth", "_orig"))
+compute_attribute_disclosure <- function(method, m) {
   
-  matched_data <- matched_data %>%
-    mutate(TCAP = ifelse(!!sym(paste0(target_var, "_synth")) == !!sym(paste0(target_var, "_orig")), 1, 0))
+  # Load files dynamically
+  path <- "Medical Insurance Cost Data/Data"
+  pattern <- paste0("syn_medical_insurance_", method, "_(", paste(1:m, collapse = "|"), ")\\.csv$")
+  dateien <- list.files(path = file.path(path, method), pattern = pattern, full.names = TRUE)
   
-  mean(matched_data$TCAP, na.rm = TRUE)  # Final TCAP score for the dataset
-}
-
-compute_TCAP_multiple <- function(original_data, synthetic_datasets, key_vars, target_var) {
-  tcap_scores <- map_dbl(synthetic_datasets, function(synth_data) {
-    synth_data <- compute_WEAP(synth_data, key_vars, target_var)
-    
-    # Debugging: Print unique WEAP values
-    print("Unique WEAP values before filtering:")
-    print(unique(synth_data$WEAP))
-    
-    synth_data <- filter_high_WEAP(synth_data)
-    
-    # Debugging: Check number of records remaining
-    print(paste("Records remaining after filtering:", nrow(synth_data)))
-    
-    if (nrow(synth_data) == 0) {
-      return(NA)  # Avoid NaN issues
-    }
-    
-    tcap_value <- compute_TCAP(original_data, synth_data, key_vars, target_var)
-    
-    # Debugging: Print TCAP for each dataset
-    print(paste("TCAP score for this dataset:", tcap_value))
-    
-    return(tcap_value)
+  # Read data
+  syn_data <- lapply(dateien, read.csv)
+  
+  # Convert categorical variables
+  syn_data <- lapply(syn_data, function(df) {
+    df$sex <- as.factor(df$sex)
+    #df$children <- as.factor(as.integer(df$children))
+    df$smoker <- as.factor(df$smoker)
+    df$region <- as.factor(df$region)
+    return(df)
   })
   
-  mean_tcap <- mean(tcap_scores, na.rm = TRUE)  # Avoid NaN if all values are NA
+  # Compute attribute disclosure (disclosure function should be defined)
+  attribute_disclosure <- disclosure(syn_data, medical_insurance_data, 
+                                     keys = c("age", "sex", "region"), 
+                                     target = "charges")
   
-  # Debugging: Print final TCAP values
-  print("Final TCAP scores per dataset:")
-  print(tcap_scores)
+  # Example of using attribute_disclosure$allCAPs[5]
+  tcap_value <- attribute_disclosure$allCAPs[[5]]/100
   
-  return(mean_tcap)
+  if (is.numeric(tcap_value)) {
+    return(round(mean(tcap_value), 3))
+  } else {
+    # Falls der Wert nicht numerisch ist, NA zurückgeben
+    return(NA)
+  }
 }
-
-
-
-
-
-
-
-# Function to compute TCAP scores for a given method and m values
-compute_tcap_for_method <- function(method, m_values) {
-  path <- paste0("Medical Insurance Cost Data/Data/", tolower(method), "/")
-  pattern <- paste0("^syn_medical_insurance_", tolower(method), "_.*\\.csv$")
-  
-  # List all files
-  all_files <- list.files(path = path, pattern = pattern, full.names = TRUE)
-  
-  # Compute TCAP scores for each m value
-  tcap_scores <- sapply(m_values, function(m) {
-    # Build regex dynamically to match correct files for given m
-    regex_m <- if (m == 10) {
-      "syn_medical_insurance_.*_(1|2|3|4|5|6|7|8|9|10)\\.csv$"
-    } else if (m == 50) {
-      "syn_medical_insurance_.*_([1-9]|[1-4][0-9]|50)\\.csv$"
-    } else { # Default case for m = 5
-      "syn_medical_insurance_.*_[1-5]\\.csv$"
-    }
-    
-    # Select matching files
-    selected_files <- all_files[grepl(regex_m, all_files)]
-    syn_data_list <- lapply(selected_files, read.csv)
-    
-    # Compute TCAP score
-    compute_TCAP_multiple(real_data, syn_data_list, key_vars = c("age", "sex", "region"), target_var = "charges")
-  })
-  
-  return(tcap_scores)
-}
-
-
-
 
 
 

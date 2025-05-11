@@ -102,28 +102,17 @@ write.csv(mean_results, "IST-3 Data/evaluation_disclosure_risk/mean_membership_d
 # 2. Attribute disclosure risk ####
 
 
-## 2.1 Calculate TCAP ####
-
-#m_values <- c(5, 10, 50)
-m_values <- c(5)
-
+# Define methods and sample sizes
 methods <- c("synthpop", "arf", "privbayes", "ctgan", "tvae", "tabsyn")
+sample_sizes <- c(5)
 
-# Compute TCAP scores for all methods
-tcap_results <- data.frame(
-  Methode = methods,
-  do.call(rbind, lapply(methods, compute_tcap_for_method, m_values = m_values))
-)
+# Compute results for all methods and sample sizes
+results <- expand.grid(Method = methods, SampleSize = sample_sizes)
+results$TCAP<- mapply(compute_attribute_disclosure, results$Method, results$SampleSize)
 
-# Rename columns for better readability
-#colnames(tcap_results) <- c("Methode", "m = 5", "m = 10", "m = 50")
-colnames(tcap_results) <- c("Methode", "m = 5")
+print(results)
 
-print(tcap_results)
-
-
-# Save the TCAP results to a CSV file
-write.csv(tcap_results, "IST-3 Data/evaluation_disclosure_risk/TCAP_scores.csv", row.names = FALSE)
+write.csv(results, "IST-3 Data/evaluation_disclosure_risk/tcap_synthpop.csv", row.names = FALSE)
 
 
 

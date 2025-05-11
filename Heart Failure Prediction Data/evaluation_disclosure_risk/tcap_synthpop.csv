@@ -1,0 +1,7 @@
+"Method","SampleSize","TCAP"
+"synthpop",5,0.596
+"arf",5,0.623
+"privbayes",5,0.509
+"ctgan",5,0.476
+"tvae",5,0.464
+"tabsyn",5,1

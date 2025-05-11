@@ -230,7 +230,7 @@ disclosure_risk_data <- data.frame(
   DCR = c(0.044, 0.040, 0.080, 0.042, 0.035, 0.044),
   NNDR = c(0.747, 0.773, 0.820, 0.725, 0.722, 0.766),
   M = c(0.072, 0.027, 0.067, 0.014, -0.001, 0.025),
-  TCAP = c(0.642, 0.579, 0.571, 0.692, 0.400, 0.587),
+  TCAP = c(0.623, 0.476, 0.509, 0.596, 1.000, 0.464),
   Authenticity = c(0.524, 0.547, 0.647, 0.489, 0.497, 0.491)
 )
 
@@ -270,7 +270,7 @@ radar_data_full <- rbind(
 )
 
 # Set row names
-row.names(radar_data_full) <- c("Max", "Min", row.names(raw_data))
+row.names(radar_data_full) <- c("Max", "Min", row.names(disclosure_risk_data))
 
 
 # Labels and colors
