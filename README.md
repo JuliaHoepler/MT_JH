@@ -8,7 +8,11 @@ This repository contains data, code, and plots for evaluating various synthetic 
 
 ## 💻 Computational Environment
 
-All computations were performed on a Microsoft Windows 11 Pro system with an Intel(R) Core(TM) i5-8250U CPU and 8 GB of RAM, using **R version 4.4.2**.
+All computations were performed on a Microsoft Windows 11 Pro system with an Intel(R) Core(TM) i5-8250U CPU and 8 GB of RAM.
+
+- **R version**: 4.4.2  
+- **Python environment**: Anaconda (conda version 23.7.4)  
+  - Jupyter Notebooks and Python-based synthesizers (CTGAN, TVAE, PrivBayes, etc.) were executed using the Anaconda environment.
 
 ---
 
